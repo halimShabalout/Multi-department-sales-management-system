@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  mongo:
+    container_name: sales-mongo
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/data:/data/db          # تخزين بيانات MongoDB
+      - ./mongo/config:/data/configdb  # تخزين ملفات الإعدادات الخاصة بـ MongoDB
+
+  backend:
+    container_name: sales-backend
+    build:
+      context: ./backend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+      - /usr/src/app/dist # لضمان استمرارية بناء الـ NestJS عند التطوير
+    env_file:
+      - ./backend/.env
+      
+  frontend:
+    container_name: sales-frontend
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+      - /usr/src/app/.next # لضمان تخزين بناء Next.js عند التطوير
